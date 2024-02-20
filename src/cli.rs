@@ -65,10 +65,6 @@ pub struct InfoArgs {
     /// Token generated from when the file was uploaded
     #[arg(short, long)]
     pub token: String,
-
-    /// Show human-readable timestamp for the file expiry
-    #[arg(short, long)]
-    pub formatted: bool,
 }
 
 #[derive(Args, Debug)]

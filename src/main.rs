@@ -8,6 +8,7 @@ fn main() -> anyhow::Result<()> {
 
     match &cli.commands {
         Commands::Upload(args) => api::upload(&args)?,
+        Commands::Info(args) => api::info(&args)?,
         _ => {}
     }
 

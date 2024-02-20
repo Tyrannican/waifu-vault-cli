@@ -15,13 +15,6 @@ pub(crate) enum ApiResponse {
         name: String,
         message: String,
         status: u16,
-        errors: Vec<ApiError>,
     },
     Delete(bool),
-}
-
-#[derive(Deserialize, Debug)]
-pub(crate) struct ApiError {
-    pub name: String,
-    pub message: String,
 }

@@ -46,9 +46,26 @@ pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
     Ok(())
 }
 
-pub(crate) async fn download(args: DownloadArgs) {}
-pub(crate) async fn info(args: InfoArgs) {}
-pub(crate) async fn delete(args: DeleteArgs) {}
+pub(crate) fn download(args: &DownloadArgs) {}
+pub(crate) fn info(args: &InfoArgs) -> Result<()> {
+    let api_url = format!("{API}/{}", args.token.clone());
+    let request = {
+        let mut r = Client::new().get(api_url);
+        r = r.query(&[("formatted", true)]);
+
+        r
+    };
+
+    dbg!(&request);
+    let response = request.send()?;
+    let status = response.status();
+    // dbg!(&response.text()?);
+    let response: ApiResponse = response.json()?;
+    parse_response(response, status);
+
+    Ok(())
+}
+pub(crate) fn delete(args: &DeleteArgs) {}
 
 fn parse_response(response: ApiResponse, status_code: StatusCode) {
     println!("--= Waifu Vault Client =--\n");
@@ -60,7 +77,7 @@ fn parse_response(response: ApiResponse, status_code: StatusCode) {
             retention_period,
         } => {
             if status_code == StatusCode::OK {
-                println!("File status: File already exists!");
+                println!("File status: File exists!");
             } else if status_code == StatusCode::CREATED {
                 println!("File status: File stored successfully!");
             } else {
@@ -80,14 +97,9 @@ fn parse_response(response: ApiResponse, status_code: StatusCode) {
             name,
             message,
             status: _,
-            errors,
         } => {
             println!("Received a bad response from API: {name}");
             println!("This is probably due to {message}");
-            println!("More error info:");
-            for error in errors {
-                println!("Error: {} - Message: {}", error.name, error.message);
-            }
         }
         ApiResponse::Delete(result) => {
             if result {
