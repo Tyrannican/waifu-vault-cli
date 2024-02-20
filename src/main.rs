@@ -3,8 +3,13 @@ mod cli;
 
 use cli::*;
 
-#[tokio::main]
-async fn main() {
+fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
-    println!("CLI: {cli:?}");
+
+    match &cli.commands {
+        Commands::Upload(args) => api::upload(&args)?,
+        _ => {}
+    }
+
+    Ok(())
 }

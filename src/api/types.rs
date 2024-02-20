@@ -1,19 +1,23 @@
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
-pub(crate) struct OkResponse {
-    pub token: String,
-    pub url: String,
-    pub protected: bool,
-    pub retention: u64,
-}
+#[serde(untagged)]
+pub(crate) enum ApiResponse {
+    OkResponse {
+        token: String,
+        url: String,
+        protected: bool,
 
-#[derive(Deserialize, Debug)]
-pub(crate) struct BadResponse {
-    pub name: String,
-    pub message: String,
-    pub status: u16,
-    pub errors: Vec<ApiError>,
+        #[serde(rename = "retentionPeriod")]
+        retention_period: String,
+    },
+    BadResponse {
+        name: String,
+        message: String,
+        status: u16,
+        errors: Vec<ApiError>,
+    },
+    Delete(bool),
 }
 
 #[derive(Deserialize, Debug)]
