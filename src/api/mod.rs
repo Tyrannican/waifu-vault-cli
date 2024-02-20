@@ -38,7 +38,6 @@ pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
         request
     };
 
-    dbg!(&request);
     let response = request.send()?;
     let status = response.status();
     let response: ApiResponse = response.json()?;
@@ -51,7 +50,7 @@ pub(crate) async fn download(args: DownloadArgs) {}
 pub(crate) async fn info(args: InfoArgs) {}
 pub(crate) async fn delete(args: DeleteArgs) {}
 
-fn parse_response(response: ApiResponse, status: StatusCode) {
+fn parse_response(response: ApiResponse, status_code: StatusCode) {
     println!("--= Waifu Vault Client =--\n");
     match response {
         ApiResponse::OkResponse {
@@ -60,9 +59,9 @@ fn parse_response(response: ApiResponse, status: StatusCode) {
             protected,
             retention_period,
         } => {
-            if status == StatusCode::OK {
+            if status_code == StatusCode::OK {
                 println!("File status: File already exists!");
-            } else if status == StatusCode::CREATED {
+            } else if status_code == StatusCode::CREATED {
                 println!("File status: File stored successfully!");
             } else {
                 unreachable!("it's either 200 or 201");
@@ -77,7 +76,26 @@ fn parse_response(response: ApiResponse, status: StatusCode) {
             }
             println!("It is available for {retention_period}");
         }
-        _ => {}
+        ApiResponse::BadResponse {
+            name,
+            message,
+            status: _,
+            errors,
+        } => {
+            println!("Received a bad response from API: {name}");
+            println!("This is probably due to {message}");
+            println!("More error info:");
+            for error in errors {
+                println!("Error: {} - Message: {}", error.name, error.message);
+            }
+        }
+        ApiResponse::Delete(result) => {
+            if result {
+                println!("File deleted successfully!");
+            } else {
+                println!("File was NOT deleted successfully...");
+            }
+        }
     }
     println!();
 }
