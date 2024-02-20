@@ -46,7 +46,55 @@ pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn download(args: &DownloadArgs) {}
+pub(crate) fn download(args: &DownloadArgs) -> Result<()> {
+    let api_url = format!("{API}/{}", args.token.clone());
+    let response: ApiResponse = Client::new()
+        .get(api_url)
+        .query(&[("formatted", true)])
+        .send()?
+        .json()?;
+    let parsed_response = parse_download_response(response);
+    if parsed_response.is_none() {
+        return Ok(());
+    }
+
+    let output_location = &args.output;
+    let (url, protected) = parsed_response.unwrap();
+    let request = {
+        let mut r = Client::new().get(url);
+        if protected && args.password.is_none() {
+            println!("--= Waifu Vault Client =--\n");
+            println!("This file is password protected and requires a password!");
+            println!();
+            return Ok(());
+        }
+
+        match &args.password {
+            Some(pwd) => {
+                r = r.header("x-password", pwd);
+            }
+            None => {}
+        }
+
+        r
+    };
+
+    let response = request.send()?;
+    if response.status() != StatusCode::OK {
+        eprintln!("Error occured!");
+        dbg!(&response);
+        return Ok(());
+    }
+
+    // TODO: Save file appropriately
+    // Also revisit the output save location
+
+    println!("--= Waifu Vault Client =--\n");
+    println!("File downloaded successfully and stored at {output_location}!");
+    println!();
+    Ok(())
+}
+
 pub(crate) fn info(args: &InfoArgs) -> Result<()> {
     let api_url = format!("{API}/{}", args.token.clone());
     let request = {
@@ -56,7 +104,6 @@ pub(crate) fn info(args: &InfoArgs) -> Result<()> {
         r
     };
 
-    dbg!(&request);
     let response = request.send()?;
     let status = response.status();
     let response: ApiResponse = response.json()?;
@@ -119,4 +166,25 @@ fn parse_response(response: ApiResponse, status_code: StatusCode) {
         }
     }
     println!();
+}
+
+fn parse_download_response(response: ApiResponse) -> Option<(String, bool)> {
+    match response {
+        ApiResponse::OkResponse {
+            token: _,
+            url,
+            protected,
+            retention_period: _,
+        } => Some((url, protected)),
+        ApiResponse::BadResponse {
+            name,
+            message,
+            status: _,
+        } => {
+            println!("Received a bad response from API: {name}");
+            println!("This is probably due to {message}");
+            return None;
+        }
+        _ => None,
+    }
 }

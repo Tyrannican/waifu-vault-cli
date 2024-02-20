@@ -10,6 +10,7 @@ fn main() -> anyhow::Result<()> {
         Commands::Upload(args) => api::upload(&args)?,
         Commands::Info(args) => api::info(&args)?,
         Commands::Delete(args) => api::delete(&args)?,
+        Commands::Download(args) => api::download(&args)?,
         _ => {}
     }
 
