@@ -59,13 +59,22 @@ pub(crate) fn info(args: &InfoArgs) -> Result<()> {
     dbg!(&request);
     let response = request.send()?;
     let status = response.status();
-    // dbg!(&response.text()?);
     let response: ApiResponse = response.json()?;
     parse_response(response, status);
 
     Ok(())
 }
-pub(crate) fn delete(args: &DeleteArgs) {}
+pub(crate) fn delete(args: &DeleteArgs) -> Result<()> {
+    let api_url = format!("{API}/{}", args.token.clone());
+    let request = Client::new().delete(api_url);
+    let response = request.send()?;
+    let status_code = response.status();
+    let response = response.json()?;
+
+    parse_response(response, status_code);
+
+    Ok(())
+}
 
 fn parse_response(response: ApiResponse, status_code: StatusCode) {
     println!("--= Waifu Vault Client =--\n");
