@@ -1,3 +1,4 @@
+mod api;
 mod cli;
 
 use cli::*;
@@ -6,6 +7,4 @@ use cli::*;
 async fn main() {
     let cli = Cli::parse();
     println!("CLI: {cli:?}");
-
-    println!("Hello, world!");
 }
