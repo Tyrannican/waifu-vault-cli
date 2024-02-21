@@ -1,5 +1,7 @@
 pub mod types;
 
+use std::io::Write;
+
 use crate::cli::{DeleteArgs, DownloadArgs, InfoArgs, UploadArgs};
 use types::ApiResponse;
 
@@ -77,8 +79,12 @@ impl ApiCaller {
             return Ok(());
         }
 
-        let output_location = &args.output;
         let (url, protected) = parsed_response.unwrap();
+        let output_location = match &args.output {
+            Some(output) => output.to_owned(),
+            None => format!("./{}", &args.token),
+        };
+
         let request = {
             let mut r = self.client.get(url);
             if protected && args.password.is_none() {
@@ -99,16 +105,30 @@ impl ApiCaller {
         };
 
         let response = request.send()?;
-        if response.status() != StatusCode::OK {
+        let status_code = response.status();
+
+        if status_code != StatusCode::OK {
+            let api_response: ApiResponse = response.json()?;
+            self.parse_response(api_response, status_code);
             eprintln!("Error occured!");
-            dbg!(&response);
+            self.display();
             return Ok(());
         }
 
-        // TODO: Save file appropriately
-        // Also revisit the output save location
+        // Filepath sanity
+        let output_location = if std::path::PathBuf::from(&output_location).is_dir() {
+            format!("{output_location}/wvc_file")
+        } else {
+            output_location
+        };
 
-        self.add_info("File downloaded successfully and stored at {output_location}!");
+        let mut fh = std::fs::File::create(&output_location)?;
+        let contents = response.bytes()?;
+        fh.write_all(&contents)?;
+
+        self.add_info(format!(
+            "File downloaded successfully and stored at {output_location}!"
+        ));
         self.display();
 
         Ok(())
