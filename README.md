@@ -2,7 +2,7 @@
 
 CLI to interact with the temporary storage site [Waifu Vault](https://waifuvault.moe/)
 
-:warning: Disclaimer: I do not own the site, only created this CLI to interact with it :warning:
+:warning: **Disclaimer: I do not own the site, only created this CLI to interact with it** :warning:
 
 For more information on what is allowed / disallowed and Terms of Service, please visit the website above.
 
