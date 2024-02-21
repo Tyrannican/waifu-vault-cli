@@ -15,27 +15,27 @@ pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
     let client = Client::new();
 
     let request = {
-        let mut request = client
+        let mut r = client
             .put(API)
             .query(&[("hide_filename", &args.hide_filename)]);
 
         if let Some(file) = &args.file {
             let form = Form::new().file("file", file);
-            request = request.multipart(form.unwrap());
+            r = r.multipart(form.unwrap());
         } else {
             let url = &args.url.clone().unwrap();
-            request = request.form(&[("url", url)]);
+            r = r.form(&[("url", url)]);
         }
 
         if let Some(pwd) = &args.password {
-            request = request.query(&[("password", pwd)]);
+            r = r.query(&[("password", pwd)]);
         }
 
         if let Some(expires) = &args.expires {
-            request = request.query(&[("expires", expires)]);
+            r = r.query(&[("expires", expires)]);
         }
 
-        request
+        r
     };
 
     let response = request.send()?;
@@ -132,13 +132,11 @@ fn parse_response(response: ApiResponse, status_code: StatusCode) {
             protected,
             retention_period,
         } => {
-            if status_code == StatusCode::OK {
-                println!("File status: File exists!");
-            } else if status_code == StatusCode::CREATED {
-                println!("File status: File stored successfully!");
-            } else {
-                unreachable!("it's either 200 or 201");
-            };
+            match status_code {
+                StatusCode::OK => println!("File status: File exists!"),
+                StatusCode::CREATED => println!("File status: File stored successfully!"),
+                _ => unreachable!("it's either a 200 or 201"),
+            }
 
             println!("It is stored at {url}");
             println!("It has the unique token {token}");
