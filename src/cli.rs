@@ -2,6 +2,7 @@ pub use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
+/// Cli to interact with the Waifu Vault API
 pub struct Cli {
     #[clap(subcommand)]
     pub commands: Commands,
