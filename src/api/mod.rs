@@ -1,4 +1,4 @@
-pub(crate) mod types;
+pub mod types;
 
 use crate::cli::{DeleteArgs, DownloadArgs, InfoArgs, UploadArgs};
 use types::ApiResponse;
@@ -11,7 +11,7 @@ use reqwest::{
 
 const API: &'static str = "https://waifuvault.moe/rest";
 
-pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
+pub fn upload(args: &UploadArgs) -> Result<()> {
     let client = Client::new();
 
     let request = {
@@ -46,7 +46,7 @@ pub(crate) fn upload(args: &UploadArgs) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn download(args: &DownloadArgs) -> Result<()> {
+pub fn download(args: &DownloadArgs) -> Result<()> {
     let api_url = format!("{API}/{}", args.token.clone());
     let response: ApiResponse = Client::new()
         .get(api_url)
@@ -95,7 +95,7 @@ pub(crate) fn download(args: &DownloadArgs) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn info(args: &InfoArgs) -> Result<()> {
+pub fn info(args: &InfoArgs) -> Result<()> {
     let api_url = format!("{API}/{}", args.token.clone());
     let request = {
         let mut r = Client::new().get(api_url);
@@ -111,7 +111,7 @@ pub(crate) fn info(args: &InfoArgs) -> Result<()> {
 
     Ok(())
 }
-pub(crate) fn delete(args: &DeleteArgs) -> Result<()> {
+pub fn delete(args: &DeleteArgs) -> Result<()> {
     let api_url = format!("{API}/{}", args.token.clone());
     let request = Client::new().delete(api_url);
     let response = request.send()?;

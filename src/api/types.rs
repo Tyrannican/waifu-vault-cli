@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
-pub(crate) enum ApiResponse {
+pub enum ApiResponse {
     OkResponse {
         token: String,
         url: String,
