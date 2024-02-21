@@ -12,7 +12,7 @@ use reqwest::{
     StatusCode,
 };
 
-const API: &'static str = "https://waifuvault.moe/rest";
+const API: &str = "https://waifuvault.moe/rest";
 
 pub struct ApiCaller {
     client: Client,
@@ -115,7 +115,6 @@ impl ApiCaller {
         if status_code != StatusCode::OK {
             let api_response: ApiResponse = response.json()?;
             self.parse_response(api_response, status_code);
-            eprintln!("Error occured!");
             self.display();
             return Ok(());
         }
@@ -172,10 +171,7 @@ impl ApiCaller {
     }
 
     fn display(&self) {
-        println!(
-            "{}",
-            format!("{}", "--= Waifu Vault Client =--\n".bold().yellow())
-        );
+        println!("{}", "--= Waifu Vault Client =--\n".bold().yellow());
         println!("{}", self.info_str);
     }
 
@@ -269,7 +265,7 @@ impl ApiCaller {
                     message.bright_yellow().bold()
                 ));
 
-                return None;
+                None
             }
             _ => None,
         }
