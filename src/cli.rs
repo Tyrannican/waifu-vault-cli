@@ -47,13 +47,13 @@ pub struct UploadArgs {
 
 #[derive(Args, Debug)]
 pub struct DownloadArgs {
-    /// Download token generated when the file was uploaded
+    /// File token that was generated when the file was uploaded
     #[arg(short, long)]
     pub token: String,
 
-    /// Where to store the output file
-    #[arg(short, long, default_value_t = String::from("."))]
-    pub output: String,
+    /// Output file
+    #[arg(short, long)]
+    pub output: Option<String>,
 
     /// Password if required to download the file
     #[arg(short, long)]
