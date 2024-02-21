@@ -6,6 +6,7 @@ use crate::cli::{DeleteArgs, DownloadArgs, InfoArgs, UploadArgs};
 use types::ApiResponse;
 
 use anyhow::Result;
+use colored::Colorize;
 use reqwest::{
     blocking::{multipart::Form, Client},
     StatusCode,
@@ -88,7 +89,11 @@ impl ApiCaller {
         let request = {
             let mut r = self.client.get(url);
             if protected && args.password.is_none() {
-                self.add_info("This file is password protected and requires a password!");
+                self.add_info(
+                    "This file is password protected and requires a password!"
+                        .red()
+                        .to_string(),
+                );
                 self.display();
 
                 return Ok(());
@@ -127,7 +132,8 @@ impl ApiCaller {
         fh.write_all(&contents)?;
 
         self.add_info(format!(
-            "File downloaded successfully and stored at {output_location}!"
+            "File downloaded successfully and stored at {}!",
+            output_location.bright_green().bold()
         ));
         self.display();
 
@@ -166,7 +172,10 @@ impl ApiCaller {
     }
 
     fn display(&self) {
-        println!("--= Waifu Vault Client =--\n");
+        println!(
+            "{}",
+            format!("{}", "--= Waifu Vault Client =--\n".bold().yellow())
+        );
         println!("{}", self.info_str);
     }
 
@@ -189,28 +198,50 @@ impl ApiCaller {
                     _ => unreachable!("it's either a 200 or 201"),
                 }
 
-                self.add_info(format!("It is stored at {url}"));
-                self.add_info(format!("It has the unique token: {token}"));
+                self.add_info(format!("It is stored at {}", url.bright_cyan().bold()));
+                self.add_info(format!(
+                    "It has the unique token: {}",
+                    token.bright_white().bold()
+                ));
                 if protected {
-                    self.add_info("It is a PROTECTED file");
+                    self.add_info(format!(
+                        "It is a {} file",
+                        "PROTECTED".bright_magenta().bold()
+                    ));
                 } else {
-                    self.add_info("It is an UNPROTECTED file");
+                    self.add_info(format!(
+                        "It is an {} file",
+                        "UNPROTECTED".bright_blue().bold()
+                    ));
                 }
-                self.add_info(format!("It is available for {retention_period}"));
+                self.add_info(format!(
+                    "It is available for {}",
+                    retention_period.bright_green().bold()
+                ));
             }
             ApiResponse::BadResponse {
                 name,
                 message,
                 status: _,
             } => {
-                self.add_info(format!("Received a bad response from API: {name}"));
-                self.add_info(format!("This is probably due to {message}"));
+                self.add_info(format!(
+                    "Received a bad response from API: {}",
+                    name.red().bold()
+                ));
+                self.add_info(format!(
+                    "This is probably due to: {}",
+                    message.bright_yellow().bold()
+                ));
             }
             ApiResponse::Delete(result) => {
                 if result {
-                    self.add_info("File deleted successfully!");
+                    self.add_info("File deleted successfully!".bright_green().to_string());
                 } else {
-                    self.add_info("File was NOT deleted successfully...");
+                    self.add_info(
+                        "File was NOT deleted successfully..."
+                            .bright_red()
+                            .to_string(),
+                    );
                 }
             }
         }
@@ -229,8 +260,15 @@ impl ApiCaller {
                 message,
                 status: _,
             } => {
-                self.add_info(format!("Received a bad response from API: {name}"));
-                self.add_info(format!("This is probably due to {message}"));
+                self.add_info(format!(
+                    "Received a bad response from API: {}",
+                    name.bright_red().bold()
+                ));
+                self.add_info(format!(
+                    "This is probably due to: {}",
+                    message.bright_yellow().bold()
+                ));
+
                 return None;
             }
             _ => None,
