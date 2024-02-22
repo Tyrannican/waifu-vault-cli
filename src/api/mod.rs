@@ -2,7 +2,7 @@ pub mod types;
 
 use std::io::Write;
 
-use crate::cli::{DeleteArgs, DownloadArgs, InfoArgs, UploadArgs};
+use crate::cli::{DownloadArgs, TokenArgs, UploadArgs};
 use types::ApiResponse;
 
 use anyhow::Result;
@@ -64,40 +64,10 @@ impl ApiCaller {
     }
 
     pub fn download(&mut self, args: &DownloadArgs) -> Result<()> {
-        let api_url = format!("{API}/{}", args.token.clone());
-        let response: ApiResponse = self
-            .client
-            .get(api_url)
-            .query(&[("formatted", true)])
-            .send()?
-            .json()?;
-
-        let parsed_response = self.parse_download_response(response);
-
-        if parsed_response.is_none() {
-            self.display();
-
-            return Ok(());
-        }
-
-        let (url, protected) = parsed_response.unwrap();
-        let output_location = match &args.output {
-            Some(output) => output.to_owned(),
-            None => format!("./{}", &args.token),
-        };
+        let url = &args.url;
 
         let request = {
             let mut r = self.client.get(url);
-            if protected && args.password.is_none() {
-                self.add_info(
-                    "This file is password protected and requires a password!"
-                        .red()
-                        .to_string(),
-                );
-                self.display();
-
-                return Ok(());
-            }
 
             match &args.password {
                 Some(pwd) => {
@@ -119,12 +89,7 @@ impl ApiCaller {
             return Ok(());
         }
 
-        // Filepath sanity
-        let output_location = if std::path::PathBuf::from(&output_location).is_dir() {
-            format!("{output_location}/wvc_file")
-        } else {
-            output_location
-        };
+        let output_location = self.determine_output_location(url, args.output);
 
         let mut fh = std::fs::File::create(&output_location)?;
         let contents = response.bytes()?;
@@ -139,7 +104,7 @@ impl ApiCaller {
         Ok(())
     }
 
-    pub fn info(&mut self, args: &InfoArgs) -> Result<()> {
+    pub fn info(&mut self, args: &TokenArgs) -> Result<()> {
         let api_url = format!("{API}/{}", args.token.clone());
         let request = {
             let mut r = self.client.get(api_url);
@@ -157,7 +122,7 @@ impl ApiCaller {
         Ok(())
     }
 
-    pub fn delete(&mut self, args: &DeleteArgs) -> Result<()> {
+    pub fn delete(&mut self, args: &TokenArgs) -> Result<()> {
         let api_url = format!("{API}/{}", args.token.clone());
         let request = self.client.delete(api_url);
         let response = request.send()?;
@@ -243,31 +208,28 @@ impl ApiCaller {
         }
     }
 
-    fn parse_download_response(&mut self, response: ApiResponse) -> Option<(String, bool)> {
-        match response {
-            ApiResponse::OkResponse {
-                token: _,
-                url,
-                protected,
-                retention_period: _,
-            } => Some((url, protected)),
-            ApiResponse::BadResponse {
-                name,
-                message,
-                status: _,
-            } => {
-                self.add_info(format!(
-                    "Received a bad response from API: {}",
-                    name.bright_red().bold()
-                ));
-                self.add_info(format!(
-                    "This is probably due to: {}",
-                    message.bright_yellow().bold()
-                ));
-
-                None
+    fn determine_output_location(&self, url: impl AsRef<str>, output: Option<String>) -> String {
+        let filename = if let Some(loc) = output {
+            loc.to_owned()
+        } else {
+            match url.as_ref().split('/').last() {
+                Some(fname) => fname.to_owned(),
+                None => unreachable!("there has to be a filename from the URL"),
             }
-            _ => None,
-        }
+        };
+
+        let output_location = match output {
+            Some(loc) => loc.to_owned(),
+            None => format!("./{filename}"),
+        };
+
+        // Filepath sanity
+        let output_location = if std::path::PathBuf::from(&output_location).is_dir() {
+            format!("{output_location}/{filename}")
+        } else {
+            output_location
+        };
+
+        output_location
     }
 }
