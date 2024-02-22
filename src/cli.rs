@@ -1,3 +1,5 @@
+//! Main CLI arguments and types
+
 pub use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
