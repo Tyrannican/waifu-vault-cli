@@ -1,3 +1,5 @@
+//! Main CLI arguments and types
+
 pub use clap::{Args, Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -17,10 +19,10 @@ pub enum Commands {
     Download(DownloadArgs),
 
     /// Information about a file in the vault
-    Info(InfoArgs),
+    Info(TokenArgs),
 
     /// Delete a file from the vault
-    Delete(DeleteArgs),
+    Delete(TokenArgs),
 }
 
 #[derive(Args, Debug)]
@@ -48,9 +50,9 @@ pub struct UploadArgs {
 
 #[derive(Args, Debug)]
 pub struct DownloadArgs {
-    /// File token that was generated when the file was uploaded
+    /// URL of the item to download
     #[arg(short, long)]
-    pub token: String,
+    pub url: String,
 
     /// Output file
     #[arg(short, long)]
@@ -62,14 +64,7 @@ pub struct DownloadArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct InfoArgs {
-    /// Token generated from when the file was uploaded
-    #[arg(short, long)]
-    pub token: String,
-}
-
-#[derive(Args, Debug)]
-pub struct DeleteArgs {
+pub struct TokenArgs {
     /// Token generated from when the file was uploaded
     #[arg(short, long)]
     pub token: String,
