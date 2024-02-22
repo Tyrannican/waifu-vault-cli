@@ -17,10 +17,10 @@ pub enum Commands {
     Download(DownloadArgs),
 
     /// Information about a file in the vault
-    Info(InfoArgs),
+    Info(TokenArgs),
 
     /// Delete a file from the vault
-    Delete(DeleteArgs),
+    Delete(TokenArgs),
 }
 
 #[derive(Args, Debug)]

@@ -82,14 +82,38 @@ impl ApiCaller {
         let response = request.send()?;
         let status_code = response.status();
 
-        if status_code != StatusCode::OK {
-            let api_response: ApiResponse = response.json()?;
-            self.parse_response(api_response, status_code);
-            self.display();
-            return Ok(());
+        match status_code {
+            StatusCode::FORBIDDEN => {
+                match &args.password {
+                    Some(_) => {
+                        self.add_info(
+                            "The password given for this file is incorrect!"
+                                .red()
+                                .to_string(),
+                        );
+                    }
+                    None => {
+                        self.add_info(
+                            "This file is password protected and needs a password to download!"
+                                .red()
+                                .to_string(),
+                        );
+                    }
+                }
+                self.display();
+
+                return Ok(());
+            }
+            StatusCode::OK => {}
+            _ => {
+                let api_response: ApiResponse = response.json()?;
+                self.parse_response(api_response, status_code);
+                self.display();
+                return Ok(());
+            }
         }
 
-        let output_location = self.determine_output_location(url, args.output);
+        let output_location = self.determine_output_location(url, &args.output);
 
         let mut fh = std::fs::File::create(&output_location)?;
         let contents = response.bytes()?;
@@ -208,14 +232,10 @@ impl ApiCaller {
         }
     }
 
-    fn determine_output_location(&self, url: impl AsRef<str>, output: Option<String>) -> String {
-        let filename = if let Some(loc) = output {
-            loc.to_owned()
-        } else {
-            match url.as_ref().split('/').last() {
-                Some(fname) => fname.to_owned(),
-                None => unreachable!("there has to be a filename from the URL"),
-            }
+    fn determine_output_location(&self, url: impl AsRef<str>, output: &Option<String>) -> String {
+        let filename = match url.as_ref().split('/').last() {
+            Some(fname) => fname.to_owned(),
+            None => unreachable!("there has to be a filename from the URL"),
         };
 
         let output_location = match output {
@@ -224,8 +244,9 @@ impl ApiCaller {
         };
 
         // Filepath sanity
-        let output_location = if std::path::PathBuf::from(&output_location).is_dir() {
-            format!("{output_location}/{filename}")
+        let path = std::path::PathBuf::from(&output_location);
+        let output_location = if path.is_dir() {
+            path.join(filename).to_str().unwrap().to_owned()
         } else {
             output_location
         };
