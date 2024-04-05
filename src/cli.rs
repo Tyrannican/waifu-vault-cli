@@ -19,10 +19,13 @@ pub enum Commands {
     Download(DownloadArgs),
 
     /// Information about a file in the vault
-    Info(TokenArgs),
+    Info { token: String },
+
+    /// Modify the options of a file in the vault
+    Modify(ModificationArgs),
 
     /// Delete a file from the vault
-    Delete(TokenArgs),
+    Delete { token: String },
 }
 
 #[derive(Args, Debug)]
@@ -46,6 +49,10 @@ pub struct UploadArgs {
     /// Set a password for the file which is required when downloading the file
     #[arg(short, long)]
     pub password: Option<String>,
+
+    /// Delete the file after first access
+    #[arg(short, long)]
+    pub one_time_download: bool,
 }
 
 #[derive(Args, Debug)]
@@ -64,8 +71,24 @@ pub struct DownloadArgs {
 }
 
 #[derive(Args, Debug)]
-pub struct TokenArgs {
-    /// Token generated from when the file was uploaded
+pub struct ModificationArgs {
+    /// Token of the file to modify
     #[arg(short, long)]
     pub token: String,
+
+    /// Add a password (updates password if already set)
+    #[arg(short, long)]
+    pub password: Option<String>,
+
+    /// Previous password for the file (required if updating a password)
+    #[arg(long)]
+    pub previous_password: Option<String>,
+
+    /// Update the expiry time of the file
+    #[arg(short, long)]
+    pub custom_expiry: Option<String>,
+
+    /// Hide the file name from the URL
+    #[arg(long)]
+    pub hide_filename: Option<bool>,
 }
