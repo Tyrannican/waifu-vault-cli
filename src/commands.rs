@@ -207,7 +207,11 @@ fn format_response(response: WaifuResponse) -> Result<()> {
         )?;
     }
 
-    writeln!(writer, "It's available for {}", response.retention_period)?;
+    writeln!(
+        writer,
+        "It's available for {}",
+        response.retention_period.to_string().bright_green().bold()
+    )?;
 
     if options.one_time_download {
         writeln!(
