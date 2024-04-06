@@ -1,17 +1,31 @@
-mod api;
 mod cli;
+mod commands;
 
 use cli::*;
+use commands::{delete_file, download_file, file_info, modify_file, upload_file};
 
-fn main() -> anyhow::Result<()> {
+use anyhow::{Context, Result};
+use waifuvault::ApiCaller;
+
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = Cli::parse();
-    let mut api_caller = api::ApiCaller::new();
+    let caller = ApiCaller::new();
 
-    match &cli.commands {
-        Commands::Upload(args) => api_caller.upload(args)?,
-        Commands::Info(args) => api_caller.info(args)?,
-        Commands::Delete(args) => api_caller.delete(args)?,
-        Commands::Download(args) => api_caller.download(args)?,
+    match cli.commands {
+        Commands::Upload(args) => upload_file(args, caller).await.context("upload request")?,
+        Commands::Info { token } => file_info(token, caller)
+            .await
+            .context("file info request")?,
+        Commands::Modify(args) => modify_file(args, caller)
+            .await
+            .context("update file request")?,
+        Commands::Delete { token } => delete_file(token, caller)
+            .await
+            .context("delete file request")?,
+        Commands::Download(args) => download_file(args, caller)
+            .await
+            .context("download file request")?,
     }
 
     Ok(())
